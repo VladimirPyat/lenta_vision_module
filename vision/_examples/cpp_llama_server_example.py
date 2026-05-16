@@ -4,7 +4,7 @@ from openai import OpenAI
 import base64
 
 # Кодируем вашу картинку (ценник)
-filename = "../_img/3.jpg"
+filename = "../_img/2.jpg"
 with open(filename, "rb") as image_file:
     base64_image = base64.b64encode(image_file.read()).decode('utf-8')
 
