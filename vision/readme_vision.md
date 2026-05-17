@@ -1,4 +1,4 @@
-```text
+
 # Модуль vision для распознавания ценников в супермаркете
 
 ## Описание
@@ -31,7 +31,10 @@
 bash
 pip install -r requirements.txt
 ```
+Если для работы нужны какие то модели - ссылки для скачивания есть в файлах `models_find.md`
+
 ## Использование:
+
 Для запуска модуля используйте следующий код:
 ```
 python
@@ -40,10 +43,10 @@ from vision.vision_main import vision_main
 
 # Загрузите изображение
 img_bgr = cv2.imread("path_to_image.jpg")
-# Запуск сервера LLM 
+### Запуск сервера LLM 
 python3 -m llama_cpp.server   --config_file server_config.json
 
-## Настройки 
+# Настройки 
 
 config_dict = {
 "min_blur_score": 6.0,

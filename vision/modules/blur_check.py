@@ -27,7 +27,8 @@ def get_blur_score_robust(image: np.ndarray) -> float:
     score = cv2.Laplacian(normalized, cv2.CV_64F).var()
     return score
 
-def is_not_blurred(image: np.ndarray, blur_threshold: float = 6) -> bool:
-
+def is_not_blurred(image: np.ndarray, threshold: float) -> tuple[bool, float]:
+    """Проверяет, достаточно ли резкий кадр."""
+    # Используем нашу функцию с нормализацией яркости
     score = get_blur_score_robust(image)
-    return score >= blur_threshold
+    return score >= threshold, score

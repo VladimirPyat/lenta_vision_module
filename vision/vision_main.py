@@ -1,10 +1,12 @@
+from pathlib import Path
+
 import cv2
 import logging
 import numpy as np
 from typing import Dict, Any, Tuple
 
 from vision.cpp_llm.llama_cpp_client import LlamaCPPClient
-from vision.modules.blur_check import get_blur_score_robust
+from vision.modules.blur_check import get_blur_score_robust, is_not_blurred
 from vision.modules.hsv_color_check import detect_price_tag_color
 from vision.qr_bar_code.cv_codes import read_codes_opencv
 from vision.utils.base64_converter import ImageConverter
@@ -18,20 +20,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger("VisionPipeline")
 
-# Предполагается, что эти модули лежат рядом в вашем проекте
-# from utils import get_blur_score_robust, detect_price_tag_color_v2, read_codes_opencv
-# from llm_client import ImageConverter, LlamaCPPClient, build_prompt_from_yaml
-
 
 # ==========================================
 # Вспомогательные функции (Валидаторы)
 # ==========================================
-
-def is_not_blurred(image: np.ndarray, threshold: float) -> Tuple[bool, float]:
-    """Проверяет, достаточно ли резкий кадр."""
-    # Используем нашу функцию с нормализацией яркости
-    score = get_blur_score_robust(image)
-    return score >= threshold, score
 
 def validate_ocr_data(ocr_data: Dict[str, Any]) -> Tuple[bool, str]:
     """
@@ -64,24 +56,27 @@ def validate_ocr_data(ocr_data: Dict[str, Any]) -> Tuple[bool, str]:
 # ГЛАВНАЯ ФУНКЦИЯ ПАЙПЛАЙНА
 # ==========================================
 
-def vision_main(img_bgr: np.ndarray, config_dict: dict) -> dict:
+def vision_main(img_bgr: np.ndarray, config_dict: dict  = {}) -> dict:
     """
     Главный конвейер обработки изображения ценника.
     Принимает изображение и словарь с настройками.
     """
     # 0. Читаем конфиги (с дефолтными значениями на случай их отсутствия)
-    BLUR_THRESHOLD = config_dict.get("min_blur_score", 6.0)
+    BLUR_THRESHOLD = config_dict.get("min_blur_score", 8.0)
     COLOR_THRESHOLD = config_dict.get("color_threshold", 0.25)
     LLM_BASE_URL = config_dict.get("llm_base_url", "http://localhost:8000/v1")
-    PROMPT_PATH = config_dict.get("prompt_path", "../cpp_llm/prompt_schema.yaml")
+    CPP_FOLDER = config_dict.get("cpp_folder", "cpp_llm")
+    PROMPT_CONFIG = config_dict.get("prompt_congig_file", "prompt_schema.yaml")
     UPSCALE_FX = config_dict.get("upscale_fx", 3)
+
+    PROMPT_PATH = Path(CPP_FOLDER, PROMPT_CONFIG)
 
     payload = {}
 
     try:
         # 1. ПРОВЕРКА РАЗМЫТИЯ
         is_sharp, blur_score = is_not_blurred(img_bgr, BLUR_THRESHOLD)
-        payload["blur_score"] = round(blur_score, 2)
+        #payload["blur_score"] = round(blur_score, 2)
 
         if not is_sharp:
             logger.warning(f"Брак кадра (Размытие): Score {blur_score:.2f} < {BLUR_THRESHOLD}")
@@ -96,7 +91,7 @@ def vision_main(img_bgr: np.ndarray, config_dict: dict) -> dict:
         #     logger.warning("Брак кадра (Цвет): Не похоже на ценник (other)")
         #     return {"processed": False, "reason": "color_other", "payload": payload}
 
-        # 3. ПОДГОТОВКА И ОТПРАВКА В QWEN
+        # 3. ПОДГОТОВКА И ОТПРАВКА В QWEN Vision
         logger.info(f"Кадр прошел фильтры (Score: {blur_score:.1f}, Цвет: {tag_color}). Отправка в LLM...")
 
         # Апскейл перед OCR
@@ -146,3 +141,9 @@ def vision_main(img_bgr: np.ndarray, config_dict: dict) -> dict:
             "details": str(e),
             "payload": payload # Возвращаем то, что успели собрать до падения
         }
+
+if __name__ == '__main__':
+    img_path = "_img/bad_2.jpg"
+    img = cv2.imread(img_path)
+    answer = vision_main(img)
+    print(answer)
