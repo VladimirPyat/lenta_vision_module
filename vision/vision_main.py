@@ -13,11 +13,11 @@ from vision.utils.base64_converter import ImageConverter
 from vision.utils.prompt_build import build_prompt_from_yaml
 
 # Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
 logger = logging.getLogger("VisionPipeline")
 
 
@@ -37,6 +37,9 @@ def validate_ocr_data(ocr_data: Dict[str, Any]) -> Tuple[bool, str]:
     # Проверка имени
     has_name = bool(ocr_data.get("product_name"))
 
+    # Проверка barcode
+    has_code = bool(ocr_data.get("barcode"))
+
     # Проверка цен (ищем хотя бы одну не None и не пустую)
     has_price = any([
         bool(ocr_data.get("price_default")),
@@ -44,10 +47,10 @@ def validate_ocr_data(ocr_data: Dict[str, Any]) -> Tuple[bool, str]:
         bool(ocr_data.get("price_discount"))
     ])
 
-    if not has_name:
-        return False, "Отсутствует product_name"
+    if not has_name and not has_code:
+        return False, "Отсутствует product_name и barcode"
     if not has_price:
-        return False, "Отсутствует любая из цен (default, card, discount)"
+        return False, "Отсутствует хотя бы одна цена (default, card, discount)"
 
     return True, "ok"
 
@@ -106,7 +109,7 @@ def vision_main(img_bgr: np.ndarray, config_dict: dict  = {}) -> dict:
         is_valid, validation_msg = validate_ocr_data(llm_data)
 
         if not is_valid:
-            logger.error(f"Брак OCR: {validation_msg}")
+            logger.warning(f"Брак OCR: {validation_msg}")
             payload.update(llm_data if isinstance(llm_data, dict) else {})
             return {"processed": False, "reason": "ocr_validation_failed", "payload": payload}
 
@@ -134,7 +137,7 @@ def vision_main(img_bgr: np.ndarray, config_dict: dict  = {}) -> dict:
         }
 
     except Exception as e:
-        logger.exception("Критическая ошибка в пайплайне vision_main:")
+        logger.error(f"Критическая ошибка в пайплайне vision_main: {e}")
         return {
             "processed": False,
             "reason": "process_error",
@@ -143,7 +146,8 @@ def vision_main(img_bgr: np.ndarray, config_dict: dict  = {}) -> dict:
         }
 
 if __name__ == '__main__':
-    img_path = "_img/bad_2.jpg"
+    img_path = "/work/lenta_cv/vision/_img/bad_1.jpg"
     img = cv2.imread(img_path)
     answer = vision_main(img)
-    print(answer)
+    for key in answer:
+        print(f"{key}: {answer[key]}")

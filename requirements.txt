@@ -1,6 +1,12 @@
 llama-cpp-python[vision]
+ultralytics==8.4.51
+supervision==0.28.0
 pillow==12.2.0
-opencv-python==4.13.0.92
+opencv-contrib-python
+fastapi==0.136.1
+uvicorn==0.47.0
+python-multipart==0.0.29
+pyyaml>=6.0
+pyzbar==0.1.9
 numpy
-pyzbar
 pandas

@@ -1,0 +1,14 @@
+{
+  "host": "0.0.0.0",
+  "port": 8000,
+  "models": [
+    {
+      "model": "bin/ZwZ-8B-Q6_K.gguf",
+      "model_alias": "price-tag-vlm",
+      "clip_model_path": "bin/ZwZ-8B.mmproj-Q8_0.gguf",
+      "chat_format": "qwen2.5-vl",
+      "n_ctx": 4096,
+      "n_gpu_layers": 0
+    }
+  ]
+}

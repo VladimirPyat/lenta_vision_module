@@ -1,0 +1,51 @@
+# ==========================================
+# ПУТИ (PATHS)
+# Указываются относительно корня проекта (папки, где лежит main.py)
+# ==========================================
+paths:
+  tracker_model: "detection/bin/yolo-12s_prices.pt"               # Веса YOLO
+  cpp_folder: "vision/cpp_llm"                   # Папка с локальной LLM
+  prompt_config: "prompt_schema.yaml"     # Конфиг промпта
+  output_dir: "_output"                           # Куда сохранять CSV
+  input_dir: "_download"                           # Куда загрузить видео
+  temp_image_dir: "_download"                           # Куда загрузить видео
+
+# ==========================================
+# 1. НАСТРОЙКИ ТРЕКЕРА (YOLO + ByteTrack)
+# ==========================================
+tracker:
+  conf: 0.40
+  iou: 0.45
+  imgsz: 640
+  save_video: false
+  show: true
+  skip_frames: 6     # Обрабатывать каждый 7-й кадр
+
+# ==========================================
+# 2. НАСТРОЙКИ АДАПТЕРА (Нарезка кропов)
+# ==========================================
+adapter:
+  crop_margin: 15
+  save_crops: False
+
+
+# ==========================================
+# 3. НАСТРОЙКИ VISION (Анализ ценника)
+# ==========================================
+vision:
+  min_blur_score: 10.0
+  color_threshold: 0.2
+  llm_base_url: "http://localhost:8000/v1"
+  upscale_fx: 3
+
+# ==========================================
+# 4. НАСТРОЙКИ ОРКЕСТРАТОРА (Голосование и логика)
+# ==========================================
+controller:
+  track_success_threshold: 3
+  track_timeout_frames: 20
+  min_matches_required: 2
+  price_fields_priority:
+    - "price_card"
+    - "price_discount"
+    - "price_default"
