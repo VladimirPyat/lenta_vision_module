@@ -13,14 +13,14 @@ from detection.video_gen_tracker import YOLOTracker
 from vision.vision_main import vision_main
 
 # Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    force=True
-)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("openai").setLevel(logging.WARNING)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S',
+#     force=True
+# )
+# logging.getLogger("httpcore").setLevel(logging.WARNING)
+# logging.getLogger("openai").setLevel(logging.WARNING)
 logger = logging.getLogger("Main")
 
 # ==========================================
@@ -76,7 +76,7 @@ def load_config(config_path: str = "config.yaml") -> dict:
 
     return flat_config
 
-def process_video_task(video_path: str, rotation_angle: int, output_csv_path: str):
+def process_video_task(video_path: str, rotation_angle: int, output_csv_path: str, progress_cb=None):
     logger.info(f"Начинаем задачу. Видео: {video_path}, Угол: {rotation_angle}")
     config = load_config("config.yaml")
     
@@ -103,7 +103,8 @@ def process_video_task(video_path: str, rotation_angle: int, output_csv_path: st
         save_crops=config.get("save_crops", False)
     )
 
-    df = run_pipeline(tracker_module=adapter, vision_callable=vision_main, config_dict=config)
+    df = run_pipeline(tracker_module=adapter, vision_callable=vision_main, config_dict=config,
+                      progress_cb=progress_cb)
 
     video_filename = Path(video_path).name
     if not df.empty:

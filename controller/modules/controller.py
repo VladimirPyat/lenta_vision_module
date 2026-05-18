@@ -17,7 +17,7 @@ class ControllerPipeline:
     закрывать обработку объектов.
     """
 
-    def __init__(self, tracker_module, vision_callable, config_dict: dict = None):
+    def __init__(self, tracker_module, vision_callable, config_dict: dict = None, progress_cb=None):
         """
         Инициализация конвейера.
 
@@ -28,8 +28,9 @@ class ControllerPipeline:
         """
         self.tracker = tracker_module
         self.vision_main = vision_callable
-
         self.config = config_dict or {}
+        # Сохраняем коллбэк как атрибут класса
+        self.progress_cb = progress_cb
 
         # ==========================================
         # РАСПАКОВКА НАСТРОЕК
@@ -68,12 +69,16 @@ class ControllerPipeline:
                     obj = self.tracker.get_next()
                 except Exception as e:
                     logger.error(f"Критическая ошибка трекера при получении кадра: {e}", exc_info=True)
-                    break # Если трекер сломался, дальше идти бессмысленно
+                    break
 
                 # Если видео/картинки кончились - выходим из цикла
                 if not obj:
-                    logger.debug("🏁 Источник данных иссяк. Завершаем обработку.")
+                    logger.debug(" Источник данных иссяк. Завершаем обработку.")
                     break
+
+                # Сообщаем API на каком мы кадре
+                if self.progress_cb:
+                    self.progress_cb(obj.frame_number)
 
                 current_frame = obj.frame_number
                 t_id = obj.track_id

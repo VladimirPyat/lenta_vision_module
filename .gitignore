@@ -37,3 +37,4 @@ __pycache__
 _img/
 bin/
 _download/
+_output/

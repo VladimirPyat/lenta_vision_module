@@ -16,15 +16,15 @@ from vision.vision_main import vision_main
 
 logger = logging.getLogger("ControllerPipeline")
 
-def run_pipeline(tracker_module, vision_callable, config_dict: dict = None):
+def run_pipeline(tracker_module, vision_callable, config_dict: dict = None, progress_cb=None):
     """
     Внешний интерфейс для запуска проверки всего конвейера.
-    Принимает на вход путь к файлу (или заглушку папки), трекер, функцию vision и конфиг.
     """
     pipeline = ControllerPipeline(
         tracker_module=tracker_module,
         vision_callable=vision_callable,
-        config_dict=config_dict
+        config_dict=config_dict,
+        progress_cb=progress_cb  # <--- ПРОКИДЫВАЕМ ЕГО В КЛАСС
     )
     return pipeline.run()
 

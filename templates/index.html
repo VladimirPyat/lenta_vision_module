@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Lenta CV: Распознавание ценников</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .form-group { margin-bottom: 20px; }
+        #statusBox { margin-top: 20px; padding: 15px; background: #f4f4f4; border-radius: 5px; display: none; }
+        .btn { padding: 10px 15px; background: #0042b3; color: white; border: none; cursor: pointer; border-radius: 3px;}
+        .btn:disabled { background: #ccc; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h2>Загрузка видео для распознавания</h2>
+
+<form id="uploadForm">
+    <div class="form-group">
+        <label><b>Выберите видеофайл (MP4):</b></label><br><br>
+        <input type="file" id="videoFile" accept="video/mp4" required>
+    </div>
+
+    <div class="form-group">
+        <label><b>Угол поворота ценника:</b></label><br>
+        <label><input type="radio" name="rotation" value="0"> 0°</label>
+        <label><input type="radio" name="rotation" value="90" checked> 90° (влево)</label>
+        <label><input type="radio" name="rotation" value="180"> 180°</label>
+        <label><input type="radio" name="rotation" value="270"> 270° (вправо)</label>
+    </div>
+
+    <button type="submit" class="btn" id="submitBtn">Начать обработку</button>
+</form>
+
+<div id="statusBox">
+    <p id="statusText">Загрузка...</p>
+    <a id="downloadBtn" class="btn" style="display: none; text-decoration: none;" href="#" download>📥 Скачать CSV</a>
+    <p style="font-size: 0.85em; color: #555; margin-top: 10px;">
+        <i>⏱️ Примечание: Обработка одного кадра может занимать до минуты. Пожалуйста, проявите терпение и не закрывайте вкладку.</i>
+    </p>
+</div>
+
+<script>
+    document.getElementById('uploadForm').onsubmit = async function(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('videoFile');
+        const rotation = document.querySelector('input[name="rotation"]:checked').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        if (fileInput.files.length === 0) return;
+
+        // Блокируем кнопку и показываем статус
+        submitBtn.disabled = true;
+        statusBox.style.display = 'block';
+        downloadBtn.style.display = 'none';
+        statusText.innerText = "Отправка видео на сервер...";
+
+        // Собираем данные
+        const formData = new FormData();
+        formData.append("video", fileInput.files[0]);
+        formData.append("rotation_angle", rotation);
+
+        try {
+            // 1. Отправляем видео
+            const response = await fetch("/api/recognize", { method: "POST", body: formData });
+            const data = await response.json();
+
+            if (data.task_id) {
+                // 2. Начинаем опрос сервера (каждые 3 секунды)
+                const interval = setInterval(async () => {
+                    const statusRes = await fetch(`/api/status/${data.task_id}`);
+                    const statusData = await statusRes.json();
+
+                    if (statusData.status === "processing") {
+                        statusText.innerText = `В работе ⚙️ Текущий кадр: ${statusData.current_frame}`;
+                    } else if (statusData.status === "done") {
+                        clearInterval(interval);
+                        statusText.innerHTML = "<span class='success'>✅ Готово!</span>";
+                        downloadBtn.href = `/api/download/${data.task_id}`;
+                        downloadBtn.style.display = 'inline-block';
+                        submitBtn.disabled = false;
+                    } else if (statusData.status === "error") {
+                        clearInterval(interval);
+                        statusText.innerText = `❌ Ошибка: ${statusData.error}`;
+                        submitBtn.disabled = false;
+                    }
+                }, 3000);
+            }
+        } catch (err) {
+            statusText.innerText = "❌ Ошибка соединения с сервером.";
+            submitBtn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>
