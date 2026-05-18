@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 from pathlib import Path
 import shutil
+from datetime import datetime
 
 
 from controller.controller_main import run_pipeline
@@ -84,7 +85,7 @@ def process_video_task(video_path: str, rotation_angle: int, output_csv_path: st
     logger.debug("📁 Отладочная папка '_img' очищена и готова к работе.")
 
     skip_val = config.get("skip_frames", 0)
-    logger.info(f"⚙️ Настройки трекера: пропускаем {skip_val} кадров (обрабатываем каждый {skip_val + 1}-й)")
+    logger.info(f" Настройки трекера: пропускаем {skip_val} кадров (обрабатываем каждый {skip_val + 1}-й)")
 
     live_yolo_tracker = YOLOTracker(
         model_path=config.get("tracker_model", "best.pt"),
@@ -125,23 +126,26 @@ def process_video_task(video_path: str, rotation_angle: int, output_csv_path: st
 if __name__ == "__main__":
     # Этот блок сработает ТОЛЬКО если ты запустишь этот файл вручную.
     test_config = load_config("config.yaml")
-    test_video_path = test_config.get("video_source", "_download/43_15.mp4")
+    test_video_path = test_config.get("video_source", "_download/25_2-10.mp4")
 
     # 1. Забираем путь к выходной папке из конфига (если нет - берем "outputs")
-    out_dir_str = test_config.get("output_dir", "outputs")
+    out_dir_str = test_config.get("output_dir", "_output")
     out_dir = Path(out_dir_str).resolve()
 
     # 2. Создаем директорию, включая родительские (parents=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 3. Формируем финальный абсолютный путь к CSV-файлу
-    out_csv_path = out_dir / "submission_local_test.csv"
+    # Берем имя видео без расширения (например, "43_15")
+    video_stem = Path(test_video_path).stem
+    # Получаем текущее время в формате ЧЧ_ММ (например, "15_30")
+    time_str = datetime.now().strftime("%H_%M")
+    out_csv_path = out_dir / f"{video_stem}_{time_str}.csv"
 
     logging.getLogger("Main").info(f"📂 Папка для сохранения результатов: {out_dir}")
 
-    # 4. Вызываем ядро с тестовыми параметрами
     process_video_task(
         video_path=test_video_path,
         rotation_angle=test_config.get("crop_rotation_angle", 90),
-        output_csv_path=str(out_csv_path) # Обязательно приводим Path к строке
+        output_csv_path=str(out_csv_path) #  приводим Path к строке
     )

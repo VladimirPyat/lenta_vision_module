@@ -3,9 +3,9 @@
 # Указываются относительно корня проекта (папки, где лежит main.py)
 # ==========================================
 paths:
-  tracker_model: "detection/bin/yolo-12s_prices.pt"               # Веса YOLO
+  tracker_model: "detection/bin/yolo-12s_prices_2.pt"               # Веса YOLO
   cpp_folder: "vision/cpp_llm"                   # Папка с локальной LLM
-  prompt_config: "prompt_schema.yaml"     # Конфиг промпта
+  prompt_config: "prompt_schema.yaml"           # Конфиг промпта
   output_dir: "_output"                           # Куда сохранять CSV
   input_dir: "_download"                           # Куда загрузить видео
   temp_image_dir: "_download"                           # Куда загрузить видео

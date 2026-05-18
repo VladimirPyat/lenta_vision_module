@@ -1,1 +1,1 @@
-https://huggingface.co/models?other=base_model:quantized:inclusionAI/ZwZ-8B
+https://huggingface.co/mradermacher/ZwZ-8B-GGUF/tree/main

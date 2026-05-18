@@ -89,6 +89,18 @@ class ControllerPipeline:
 
                     # Вызываем переданную нам функцию vision_main
                     vision_result = self.vision_main(obj.crop, self.config)
+                    if vision_result.get("processed") and "payload" in vision_result:
+                        # Координаты (с защитой от None
+                        bx = obj.bbox if obj.bbox is not None else (0.0, 0.0, 0.0, 0.0)
+                        vision_result["payload"]["x_min"] = round(bx[0], 2)
+                        vision_result["payload"]["y_min"] = round(bx[1], 2)
+                        vision_result["payload"]["x_max"] = round(bx[2], 2)
+                        vision_result["payload"]["y_max"] = round(bx[3], 2)
+
+                        # Время
+                        ts = obj.frame_timestamp if obj.frame_timestamp is not None else 0.0
+                        vision_result["payload"]["frame_timestamp"] = round(ts, 2)
+
                     logger.info(f"Результат распознавания ID {t_id} : {vision_result}")
 
                 except Exception as e:
