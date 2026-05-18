@@ -5,14 +5,14 @@ from controller.modules.fake_crop_gen import CropFakeIdGen
 from vision.vision_main import vision_main
 
 # Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    force=True
-)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("openai").setLevel(logging.WARNING)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S',
+#     force=True
+# )
+# logging.getLogger("httpcore").setLevel(logging.WARNING)
+# logging.getLogger("openai").setLevel(logging.WARNING)
 
 logger = logging.getLogger("ControllerPipeline")
 
