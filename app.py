@@ -67,6 +67,13 @@ def background_runner(task_id: str, video_path: str, rotation_angle: int, csv_pa
         TASKS_DB[task_id]["status"] = "error"
         TASKS_DB[task_id]["error"] = str(e)
         logger.error(f"Ошибка в задаче {task_id}: {e}", exc_info=True)
+    finally:
+        # ОСВОБОЖДАЕМ МЕСТО НА ДИСКЕ
+        # Удаляем уникальную папку с видео после завершения (успешного или нет)
+        task_dir = Path(video_path).parent
+        if task_dir.exists() and task_dir.is_dir():
+            shutil.rmtree(task_dir, ignore_errors=True)
+            logger.info(f"🧹 Временные файлы задачи {task_id} удалены.")
 
 
 # --- ЭНДПОИНТ 1: Рендер главной страницы ---
@@ -83,8 +90,16 @@ async def start_recognition(
         rotation_angle: int = Form(90)
 ):
     task_id = str(uuid.uuid4())
-    video_ext = Path(video.filename).suffix
-    video_path = UPLOAD_DIR / f"{task_id}{video_ext}"
+
+    # СОХРАНЯЕМ ОРИГИНАЛЬНОЕ ИМЯ
+    original_filename = video.filename
+
+    # Создаем уникальную папку для этой конкретной задачи: _download/task_id/
+    task_dir = UPLOAD_DIR / task_id
+    task_dir.mkdir(parents=True, exist_ok=True)
+
+    # Путь к файлу: _download/task_id/original_video_name.mp4
+    video_path = task_dir / original_filename
 
     with open(video_path, "wb") as buffer:
         shutil.copyfileobj(video.file, buffer)

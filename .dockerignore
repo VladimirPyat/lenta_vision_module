@@ -1,0 +1,20 @@
+# Гит и среды
+.git
+.gitignore
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Тяжелые веса LLM (они не нужны в образе API, их читает llm_server через volume)
+vision/cpp_llm/bin/*.gguf
+vision/cpp_llm/bin/*.pb
+
+# Папки с медиа (они прокидываются через volumes)
+_download/
+_output/
+*.mp4
+*.jpg
+
+# Логи
+api.log
