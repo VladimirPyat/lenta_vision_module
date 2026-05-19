@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /work/lenta_cv
 
 # Ставим системные библиотеки, необходимые для работы OpenCV
-RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 build-essential cmake gcc g++ && rm -rf /var/lib/apt/lists/*
 
 # Копируем список зависимостей и устанавливаем их
 COPY requirements.txt .

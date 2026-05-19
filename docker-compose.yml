@@ -7,12 +7,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Прокидываем только папку с весами (конфиг нам больше не нужен)
+      # Прокидываем локальную папку bin в /app/models внутри контейнера
       - ./vision/cpp_llm/bin:/app/models
-    # ЗАДАЕМ НАСТРОЙКИ ПРЯМО ЗДЕСЬ (они перекроют любые другие)
     environment:
       - MODEL=/app/models/ZwZ-8B-Q6_K.gguf
       - CLIP_MODEL_PATH=/app/models/ZwZ-8B.mmproj-Q8_0.gguf
+      - CHAT_FORMAT=qwen2.5-vl
+      - MODEL_ALIAS=price-tag-vlm
+      - N_CTX=4096
       - N_GPU_LAYERS=0
       - HOST=0.0.0.0
       - PORT=8000
@@ -24,11 +26,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      # Прокидываем папки для видео и результатов
+      # Синхронизируем папки для видео и результатов с хост-машиной
       - ./_download:/work/lenta_cv/_download
       - ./_output:/work/lenta_cv/_output
     environment:
-      # Указываем нашему API, где искать LLM внутри сети Докера
       - LLM_BASE_URL=http://llm_server:8000/v1
     depends_on:
       - llm_server
